@@ -4,7 +4,9 @@ import pytest
 from pyECM.molecule_class import molecula
 from pyECM.data.moleculas import mol_SeIClO_rotated
 import matplotlib.pyplot as plt
+import os
 
+main_directory=os.path.realpath(os.path.dirname(__file__))+'/../'
 # ===============================================================
 # Plots
 # ===============================================================
@@ -18,7 +20,7 @@ def test_molecule_plot_1():
     fig=plt.figure()
     vector = np.array([-0.1219, -0.7434, 0.6576]) #Normal vector that defines the plane
     origen_achiral_atom = np.array([-1.31002, -0.33894, -0.62598]) # Point that defines the plane. Any atom of the symmetric structure
-    c = molecula(figure = fig, XYZ_file = 'pyECM/data/import/AP1_chiral.xyz', dipolo=vector, origen=origen_achiral_atom,**options)
+    c = molecula(figure = fig, XYZ_file = main_directory+'pyECM/data/import/AP1_chiral.xyz', dipolo=vector, origen=origen_achiral_atom,**options)
     c.rotate_to_align_dipole_with_z()
     c.plot_dipolo()
     c.plot_plano()
@@ -38,7 +40,7 @@ def test_molecule_plot_2():
     fig=plt.figure()
     vector = np.array([-0.1219, -0.7434, 0.6576]) #Normal vector that defines the plane
     origen_achiral_atom = np.array([-1.31002, -0.33894, -0.62598]) # Point that defines the plane. Any atom of the symmetric structure
-    c = molecula(figure = fig, XYZ_file = 'pyECM/data/import/AP1_chiral.xyz', dipolo=vector, origen=origen_achiral_atom,**options)
+    c = molecula(figure = fig, XYZ_file = main_directory+'pyECM/data/import/AP1_chiral.xyz', dipolo=vector, origen=origen_achiral_atom,**options)
     c.rotate_to_align_dipole_with_z()
     c.plot_plano()
     c.plot_dipolo()
@@ -58,7 +60,7 @@ def test_molecule_plot_3():
     fig=plt.figure()
     vector = np.array([-0.1219, -0.7434, 0.6576]) #Normal vector that defines the plane
     origen_achiral_atom = np.array([-1.31002, -0.33894, -0.62598]) # Point that defines the plane. Any atom of the symmetric structure
-    c = molecula(figure = fig, XYZ_file = 'pyECM/data/import/AP1_chiral.xyz', dipolo=vector, origen=origen_achiral_atom,**options)
+    c = molecula(figure = fig, XYZ_file = main_directory+'pyECM/data/import/AP1_chiral.xyz', dipolo=vector, origen=origen_achiral_atom,**options)
 #    c.rotate_to_align_dipole_with_z()
     c.plot_opciones()
     c.plot_plano()

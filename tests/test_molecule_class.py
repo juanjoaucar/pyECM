@@ -3,6 +3,8 @@ import pytest
 
 from pyECM.molecule_class import molecula
 from numpy.testing import assert_almost_equal
+import os
+main_directory=os.path.realpath(os.path.dirname(__file__))+'/../'
 
 # ===============================================================
 # xyz_mirror_path function
@@ -13,17 +15,18 @@ def test_create_mol_files(tmp_path):
 
     d = tmp_path / "sub"
     d.mkdir()
+    path = str(d) + "/"
 
     vector = np.array([-0.1219, -0.7434, 0.6576])
     origen_achiral_atom = np.array([-1.31002, -0.33894, -0.62598])
     c = molecula(
-        XYZ_file="pyECM/data/import/AP1_chiral.xyz",
+        XYZ_file=main_directory+"pyECM/data/import/AP1_chiral.xyz",
         dipolo=vector,
         origen=origen_achiral_atom,
     )
     c.rotate_to_align_dipole_with_z()
 
-    path = str(d) + "/"
+#    path = str(d) + "/"
 
     c.xyz_mirror_path(folder=path, prefix_name="AP1", DIRAC=True, lim_inf=0.5, lim_sup=1.0, points=None)
     file_050 = path + "AP1_0.50.xyz"
@@ -69,7 +72,7 @@ def test_create_xyzfile(tmp_path):
     vector = np.array([-0.1219, -0.7434, 0.6576])
     origen_achiral_atom = np.array([-1.31002, -0.33894, -0.62598])
     c = molecula(
-        XYZ_file="pyECM/data/import/AP1_chiral.xyz",
+        XYZ_file=main_directory+"pyECM/data/import/AP1_chiral.xyz",
         dipolo=vector,
         origen=origen_achiral_atom,
     )
@@ -99,7 +102,7 @@ def test_ecm_onpath_4c(tmp_path,capfd):
     puntos = int (round( (maximo - minimo)/delta)) + 1
     vector = np.array([-0.1807, -0.9725, -0.1469])
     origen_achiral_atom = np.array([0.0000, 0.000, 0.0000])
-    c = molecula(XYZ_file = 'pyECM/data/import/CFMAR_chiral.xyz', dipolo=vector, origen=origen_achiral_atom)
+    c = molecula(XYZ_file = main_directory+'pyECM/data/import/CFMAR_chiral.xyz', dipolo=vector, origen=origen_achiral_atom)
     c.rotate_to_align_dipole_with_z()
     c.xyz_mirror_path(folder=path, prefix_name='CFMAR_chiral', lim_inf=minimo, lim_sup=maximo, points=puntos, DIRAC = True)
 
@@ -114,11 +117,10 @@ def test_ecm_onpath_4c(tmp_path,capfd):
     assert_almost_equal(ECMs_NR,testECMs_NR,decimal=4)
     assert_almost_equal(ECMs_4c,testECMs_4c,decimal=4)
 
-
 def test_origin():
     vector = np.array([-0.1807, -0.9725, -0.1469])
-    mol_A = molecula(XYZ_file = 'pyECM/data/import/water.xyz', dipolo=vector, origen="O")
-    mol_B = molecula(XYZ_file = 'pyECM/data/import/water.xyz', dipolo=vector)
+    mol_A = molecula(XYZ_file = main_directory+'pyECM/data/import/water.xyz', dipolo=vector, origen="O")
+    mol_B = molecula(XYZ_file = main_directory+'pyECM/data/import/water.xyz', dipolo=vector)
 
 
 def test_ecm_onpath_cartesian(tmp_path,capfd):
@@ -132,7 +134,7 @@ def test_ecm_onpath_cartesian(tmp_path,capfd):
     puntos = int (round( (maximo - minimo)/delta)) + 1
     vector = np.array([-0.1807, -0.9725, -0.1469])
     origen_achiral_atom = np.array([0.0000, 0.000, 0.0000])
-    c = molecula(XYZ_file = 'pyECM/data/import/CFMAR_chiral.xyz', dipolo=vector, origen=origen_achiral_atom)
+    c = molecula(XYZ_file = main_directory+'pyECM/data/import/CFMAR_chiral.xyz', dipolo=vector, origen=origen_achiral_atom)
     c.rotate_to_align_dipole_with_z()
     c.xyz_mirror_path(folder=path, prefix_name='CFMAR_chiral', lim_inf=minimo, lim_sup=maximo, points=puntos, DIRAC = True)
 
