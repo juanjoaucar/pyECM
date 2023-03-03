@@ -70,14 +70,14 @@ These package allows to:
    3. Calculate CCM and ECM in a single structure.
    4. Calculate CCM and ECM in several structures at once and in the virtual mirroring path of each one.
 
-Read more on `ECM publications <https://pubs.acs.org/doi/pdf/10.1021/ja028646%2B>`_.
+Read more on `ECM publications <https://doi.org/10.1021/ja028646+>`_.
 
 Availability
 ============
 
 ECM can be easily installed with its dependencies using the pip or conda 
 package managers. All source code is available under the GNU General Public 
-License, version 3 from `GitLab <git@github.com:juanjoaucar/pyECM.git>`_
+License, version 3 from `GitLab <https://github.com/juanjoaucar/pyECM>`_
 and the `Python Package index <pypi.org/project/pyECM>`_.
 
 Participating
