@@ -20,6 +20,7 @@ jobs:
     - name: Install dependencies
       run: |
         echo "Testing....................."
+        cd ..
         pwd
         ls pyECM/data/import
         python -m pip install --upgrade pip
