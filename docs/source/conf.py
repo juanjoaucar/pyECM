@@ -47,7 +47,7 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
     "sphinx.ext.intersphinx",
-    "sphinxcontrib.bibtex",
+    "sphinxcontrib.bibtex"
 ]
 
 bibtex_bibfiles = ["refs.bib"]
