@@ -1,0 +1,26 @@
+DIRAC
+
+
+C   7  0 0         A
+       6.     1
+C1   0.010669 0.056551 0.008315
+LARGE BASIS base
+       7.     1
+N2   0.034730 0.047039 1.337024
+LARGE BASIS base
+      17.     1
+Cl3   1.687556 0.060949 -0.619689
+LARGE BASIS base
+       9.     1
+F4   -0.629982 -1.057920 -0.523614
+LARGE BASIS base
+       1.     1
+H5   -0.500609 0.933210 -0.361777
+LARGE BASIS base
+       1.     1
+H6   -0.891339 0.145363 1.717229
+LARGE BASIS base
+       1.     1
+H7   0.514650 -0.758882 1.702214
+LARGE BASIS base
+FINISH

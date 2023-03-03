@@ -1,0 +1,16 @@
+# to check packages 
+# -----------------------------------------------------------------------------------------------------
+# >>> pip install pipdeptree
+# >>> pipdeptree | sed "s/^.* - .*//g" | sed "/^$/d"
+# -----------------------------------------------------------------------------------------------------
+# for jupyter notebook
+jupyterlab==3.1.13
+jupyter==1.0.0
+ipython[all]
+
+# pyECM requirements
+attrs==22.2.0
+numpy==1.21.2
+pyscf==2.1.1
+matplotlib==3.4.2
+mendeleev==0.12.1
