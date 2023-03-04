@@ -203,6 +203,15 @@ class molecula:
         :param filename: xyz file name, defaults to "MOL"
         :type filename: str, optional
         """
+        atoms_name_xyz = []
+        atoms_Z = []
+        for j in range(self.nro_atoms):
+            atom_name_xyz = "".join(
+                [i for i in str(self.atoms[4][j]) if not i.isdigit()]
+            )
+            atoms_name_xyz.append(atom_name_xyz)
+            atoms_Z.append(eval("mendeleev." + atom_name_xyz + ".atomic_number"))
+
         # filas =  np.zeros(4)
         fila_0 = [self.nro_atoms, "", "", ""]
         fila_1 = ["XYZ file", "", "", ""]
@@ -217,8 +226,23 @@ class molecula:
                 ]
             )
             filas = np.vstack([filas, new_line])
-        with open(filename, "ab") as f:
-            np.savetxt(f, filas, fmt="%s")
+        # with open(filename, "ab") as f:
+        #    np.savetxt(f, filas, fmt="%s")
+
+        with open(filename, "w") as f:
+            f.write(str(self.nro_atoms) + "\n")
+            f.write("XYZ file created by pyECM\n")
+            for j in range(self.nro_atoms):
+                f.write(
+                    atoms_name_xyz[j]
+                    + "   "
+                    + "{:.6f}".format(self.positions[j][0])
+                    + " "
+                    + "{:.6f}".format(self.positions[j][1])
+                    + " "
+                    + "{:.6f}".format(self.positions[j][2])
+                    + "\n"
+                )
 
     def load_from_xyz(self, filename="MOL"):
         """Loads the molecule from a xyz file.
@@ -339,8 +363,20 @@ class molecula:
             except OSError:
                 pass
 
-            with open(filename, "ab") as f:
-                np.savetxt(f, filas, fmt="%s")
+            with open(filename, "w") as f:
+                f.write(str(self.nro_atoms) + "\n")
+                f.write("XYZ file created by pyECM\n")
+                for j in range(self.nro_atoms):
+                    f.write(
+                        atoms_name_xyz[j]
+                        + "   "
+                        + "{:.6f}".format(self.positions[j][0])
+                        + " "
+                        + "{:.6f}".format(self.positions[j][1])
+                        + " "
+                        + "{:.6f}".format(self.positions[j][2] * i)
+                        + "\n"
+                    )
 
             if DIRAC:
                 filename_DIRAC = (
