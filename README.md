@@ -110,6 +110,8 @@ GNU General Public License v3 (GLPv3)
 ### Authors and Acknowledgment
 Main authors: Juan Jose Aucar (_juanaucar@gmail.com_)
 
+Advisors: Gustavo A. Aucar and Alessandro Stroppa
+
 ### Project Status
 
 Under development
