@@ -10,7 +10,10 @@ jobs:
       - uses: actions/setup-python@v3
       - name: Install dependencies
         run: |
-          pip install sphinx sphinx_rtd_theme sphinxcontrib-bibtex
+          pip install --upgrade setuptools
+          pip install sphinx sphinx_rtd_theme sphinxcontrib.bibtex
+          python --version
+          pip list
       - name: Sphinx build
         run: |
           sphinx-build docs/source _build
