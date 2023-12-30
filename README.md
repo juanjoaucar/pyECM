@@ -1,36 +1,17 @@
+# PyECM
 
-### Description
-The Electronic Chirality Measure (ECM) is a quantity that allows to measure
-the chirality of any (chiral) molecular system. It was proposed by Luca Bellarosa and Francesco
-Zerbetto in 2003 [[1]](#1). In 2023 [[2]](#2) J. J. Aucar, A. Stroppa and G. A. Aucar have shown a novel, strong, 
-and positive correlation between the energy difference of the total electronic energies of two enantiomers and ECM,
- supporting a subtle interplay between the weak forces acting within the nuclei of a given molecule and its chirality.
+## Description
+The Electronic Chirality Measure (ECM) is a quantity that measures the chirality of any (chiral) molecular system. It was proposed by Luca Bellarosa and Francesco Zerbetto in 2003 [[1]](#1). In 2023 [[2]](#2), J. J. Aucar, A. Stroppa, and G. A. Aucar showed a novel, strong, and positive correlation between the energy difference of the total electronic energies of two enantiomers and ECM, supporting a subtle interplay between the weak forces acting within the nuclei of a given molecule and its chirality.
 
+The Electronic Chirality Measure (ECM) is an end-to-end package implemented in Python 3.9 to measure the mentioned quantity. It also has some development interface with the [PySCF](https://pyscf.org/) and [DIRAC](https://www.diracprogram.org) packages.
 
-The Electronic Chirality Measure (ECM) is an end-to-end package implemented in Python 3.9 to 
-measure the mentioned quantity. It also has some development interface
-with the [PySCF](https://pyscf.org/) and [DIRAC](https://www.diracprogram.org) packages.
+The ecm package uses simple input files in xyz format. The so-called nearest asymmetric structure is also needed. It can be easily obtained from (citar). The package also allows the user to perform some simple plots to have a better understanding of the geometry of the systems under study.
 
-The ecm package uses simple input files in xyz format. The so called nearest
-asymmetric structure is also needed. It can be easily obtained from (citar).
-The package also allows the user to perform some simple plots to have a 
-better understanding on the geometry of the systems under study.
+The ECM is calculated computing the electronic wave function using a standard and powerful quantum chemistry package such as [PySCF](https://pyscf.org/), the Python-based Simulations of Chemistry Framework. PySCF is an efficient platform for quantum chemistry calculations that can be used to simulate the properties of molecules and crystals using mean-field and post-mean-field methods [[3]](#3).
 
-The ECM is calculated computing the electronic wave function using a standard and powerful
-quantum chemistry package such as [PySCF](https://pyscf.org/), the 
-Python-based Simulations of Chemistry Framework. PySCF is an efficient 
-platform for quantum chemistry calculations that can be used to simulate the
-properties of molecules and crystals using mean-field and post-mean-field 
-methods [[3]](#3).
+The ecm main purpose is to be a user-friendly package, easy to install, import, and run, available on most platforms and open-source. As a Python module, ecm can be integrated into any workflow. This package has code reviews with unit testing and continuous integration, code coverage tools, and automatically keeps documentation up–to–date.
 
-The ecm main purpose is to be a user friendly package, easy to install, 
-import, and run, available in most platforms and open-source. 
-As a Python module, ecm can be integrated into any workflow. This package 
-has code reviews with unit testing and continuous integration, code coverage
-tools, and automatically keeps documentation up–to–date. 
-
-The basic [example](docs/source/quickstart.rst) demonstrates some of these 
-features.
+The basic [example](docs/source/quickstart.rst) demonstrates some of these features.
 
 This package allows to:
 
@@ -41,13 +22,8 @@ This package allows to:
 
 Read more on [ECM publications](https://pubs.acs.org/doi/pdf/10.1021/ja028646%2B).
 
-### Technical Documentation
-Technical documents behind this project can be accessed [here](https://juanjoaucar.gitlab.io/pyECM).
-
-
-### Requirements
-
-First you should install the required python packages 
+## Requirements
+First, you should install the required python packages:
 
       - jupyterlab==3.1.13
       - jupyter==1.0.0
@@ -58,16 +34,16 @@ First you should install the required python packages
       - matplotlib==3.4.2
       - mendeleev==0.12.1
 
-check the file `requirements.txt`. For developer, you should install `requirements_dev.txt`.
+Check the file `requirements.txt`. Developers should install `requirements_dev.txt`.
 
-### Installation
+## Installation
 pyECM is a **Python 3.9** package
 
-1. Install virtual environment:
+1. Install the virtual environment:
 
     ```python -m venv venv```
 
-2. Activate virtual environment:
+2. Activate the virtual environment:
 
     ```source venv/bin/activate```
 
@@ -85,11 +61,10 @@ pyECM is a **Python 3.9** package
 
       ``tox==3.24.3``
 
-### Usage
+## Usage
+A detailed workflow is provided in the `workflow` directory. It has a list of Jupyter notebooks with detailed examples about pyECM tools and capabilities.
 
-A detail workflow is provide into `workflow` directory. It has a list of Jupyter notebook with detail examples about pyECM tools and capabilities.
-
-1. Getting starting with some basic plots.
+1. Getting started with some basic plots.
       - `01.Plots.ipynb` 
 2. Calculation of ECM in a simple molecule. 
       - `02.ECM_one-molecule.ipynb` 
@@ -104,23 +79,21 @@ Some of the ideas to keep growing are:
 ## Contributing
 The easiest way to get help with the project is through the github project.
 
-- GitHub:  git@github.com:juanjoaucar/pyECM.git
+- GitHub:  [git@github.com:juanjoaucar/pyECM.git](https://github.com/juanjoaucar/pyECM)
 
-### Licence
+
+## Licence
 GNU General Public License v3 (GLPv3)
 
-### Authors and Acknowledgment
+## Authors and Acknowledgment
 Main authors: Juan Jose Aucar (_juanaucar@gmail.com_)
 
 Advisors: Gustavo A. Aucar and Alessandro Stroppa
 
-### Project Status
-
+## Project Status
 Under development
 
-
-Citing PyECM
-------------
+### Citing PyECM
 The following should be cited in publications utilizing the PyECM program package:
 
 [A Relationship between the Molecular Parity-Violation Energy and the Electronic Chirality Measure](https://pubs.acs.org/doi/10.1021/acs.jpclett.3c03038),
@@ -136,15 +109,8 @@ Q. Sun, T. C. Berkelbach, N. S. Blunt, G. H. Booth, S. Guo, Z. Li, J. Liu,
 J. McClain, E. R. Sayfutyarova, S. Sharma, S. Wouters, G. K.-L. Chan (2018),
 *WIREs Comput. Mol. Sci.*, **8**: e1340. doi:[10.1002/wcms.1340](https://onlinelibrary.wiley.com/doi/abs/10.1002/wcms.1340)
 
-
-
-Bug reports and feature requests
---------------------------------
+## Bug reports and feature requests
 Please submit tickets on the [issues](https://github.com/juanjoaucar/pyECM/issues) page.
-
-
-
----
 
 ### References
 <div style=font-size:12px>
@@ -162,4 +128,3 @@ Please submit tickets on the [issues](https://github.com/juanjoaucar/pyECM/issue
       SUN, Qiming, et al. PySCF: the Python‐based simulations of chemistry framework. Wiley Interdisciplinary Reviews: Computational Molecular Science, 2018, vol. 8, no 1, p. e1340.
 <br>
 </div>
-
