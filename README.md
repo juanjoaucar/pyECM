@@ -98,7 +98,7 @@ The following should be cited in publications utilizing the PyECM program packag
 
 [A Relationship between the Molecular Parity-Violation Energy and the Electronic Chirality Measure](https://pubs.acs.org/doi/10.1021/acs.jpclett.3c03038),
 J. J. Aucar, A. Stroppa, G. A. Aucar (2023),
-*J. Phys. Chem. Lett.* doi:[10.1021/acs.jpclett.3c03038](https://pubs.acs.org/doi/10.1021/acs.jpclett.3c03038)
+*J. Phys. Chem. Lett.*, **15**, 234-240  doi:[10.1021/acs.jpclett.3c03038](https://pubs.acs.org/doi/10.1021/acs.jpclett.3c03038)
 
 [PyECM23](https://doi.org/10.5281/zenodo.10149807)
 Aucar, J. J. (2023),
@@ -120,7 +120,7 @@ Please submit tickets on the [issues](https://github.com/juanjoaucar/pyECM/issue
 </div>
 <div style=font-size:12px>
       <a id="2">[2]</a> 
-      J. J. Aucar, A. Stroppa, G. A. Aucar (2033). A Relationship between the Molecular Parity-Violation Energy and the Electronic Chirality Measure. Journal of Physical Chemistry Letters.
+      J. J. Aucar, A. Stroppa, G. A. Aucar (2033). A Relationship between the Molecular Parity-Violation Energy and the Electronic Chirality Measure. Journal of Physical Chemistry Letters, 15, 234-240.
 <br>
 </div>
 <div style=font-size:12px>
