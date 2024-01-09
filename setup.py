@@ -15,7 +15,7 @@ REQUIREMENTS = [
 	"jupyter==1.0.0",
 	"ipython[all]",
 	"attrs==22.2.0",
-	"numpy==1.21.2",
+	"numpy==1.22.0",
 	"pyscf==2.1.1",
 	"matplotlib==3.4.2",
 	"mendeleev==0.12.1",
