@@ -95,7 +95,7 @@ class molecula:
         """Defines central point."""
         if self.origen is None:
             pass
-        elif type(self.origen) == str:
+        elif isinstance(self.origen, str):
             for i in range(self.nro_atoms):
                 if self.atoms[4][i] == self.origen:
                     self.punto_central = np.array(
@@ -105,12 +105,12 @@ class molecula:
                             self.positions[i][2],
                         ]
                     )
-        elif type(self.origen) == np.ndarray:
+        elif isinstance(self.origen, np.ndarray):
             self.punto_central = self.origen
 
     def origin_on_atom(self):
         """Gets central point coordinates."""
-        if type(self.origen) == str:
+        if isinstance(self.origen, str):
             for i in range(self.nro_atoms):
                 if self.atoms[4][i] == self.origen:
                     coordenadas_punto_central = np.array(
@@ -120,7 +120,7 @@ class molecula:
                             self.positions[i][2],
                         ]
                     )
-        if type(self.origen) == np.ndarray:
+        if isinstance(self.origen, np.ndarray):
             coordenadas_punto_central = self.origen
         new_positions = np.zeros(3)
         for i in range(self.nro_atoms):
