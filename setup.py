@@ -19,6 +19,8 @@ REQUIREMENTS = [
 	"pyscf==2.1.1",
 	"matplotlib==3.4.2",
 	"mendeleev==0.12.1",
+    "sphinxcontrib-bibtex==2.5.0",
+    "scipy==1.10.1"
 ]
 
 with open(PATH / "pyECM" / "__init__.py") as fp:
