@@ -5,7 +5,7 @@ The Electronic Chirality Measure (ECM) is a quantity that measures the chirality
 
 The Electronic Chirality Measure (ECM) is an end-to-end package implemented in Python 3.9 to measure the mentioned quantity. It also has some development interface with the [PySCF](https://pyscf.org/) and [DIRAC](https://www.diracprogram.org) packages.
 
-The ecm package uses simple input files in xyz format. The so-called nearest asymmetric structure is also needed. It can be easily obtained from (citar). The package also allows the user to perform some simple plots to have a better understanding of the geometry of the systems under study.
+The ecm package uses simple input files in xyz format. The so-called nearest asymmetric structure is also needed. It can be easily obtained from [this website](https://csm.ouproj.org.il/molecule). The package also allows the user to perform some simple plots to have a better understanding of the geometry of the systems under study.
 
 The ECM is calculated computing the electronic wave function using a standard and powerful quantum chemistry package such as [PySCF](https://pyscf.org/), the Python-based Simulations of Chemistry Framework. PySCF is an efficient platform for quantum chemistry calculations that can be used to simulate the properties of molecules and crystals using mean-field and post-mean-field methods [[3]](#3).
 
