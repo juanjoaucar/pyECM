@@ -30,7 +30,7 @@ class molecula:
     :examples: >>> vector = np.array([-0.1807, -0.9725, -0.1469])
         >>> origin_at = np.array([0.0000, 0.200, 0.1000])
         >>> file='pyECM/data/import/CFMAR_chiral.xyz'
-        >>> molecule = molecula(XYZ_file = file, dipolo=vector, origen=origin_at)
+        >>> molecule = molecula(XYZ_file = file, directio=vector, origen=origin_at)
     :param preloaded_molecule: _description_, defaults to None
     :type preloaded_molecule: _type_, optional
     :param figure: _description_, defaults to None
@@ -41,8 +41,8 @@ class molecula:
     :type origen: _type_, optional
     :param XYZ_file: _description_, defaults to None
     :type XYZ_file: _type_, optional
-    :param dipolo: _description_, defaults to None
-    :type dipolo: _type_, optional
+    :param direction: _description_, defaults to None
+    :type direction: _type_, optional
     """
 
     def __init__(
@@ -52,7 +52,7 @@ class molecula:
         campo=None,
         origen=None,
         XYZ_file=None,
-        dipolo=None,
+        direction=None,
         **kwargs
     ):
         self.fig = figure
@@ -62,12 +62,12 @@ class molecula:
 
         if preloaded_molecule is not None:
             self.preloaded_molecule = preloaded_molecule
-            self.nro_atoms, self.atoms, self.dipolo, self.bonds = preloaded_molecule
+            self.nro_atoms, self.atoms, self.direction, self.bonds = preloaded_molecule
 
         if XYZ_file is not None:
             self.XYZ_file = XYZ_file
             self.load_from_xyz(filename=self.XYZ_file)
-            self.dipolo = dipolo
+            self.direction = direction
 
         # self.validar()
         self.atoms_positions()
@@ -130,25 +130,27 @@ class molecula:
         self.positions = new_positions
         self.coordenadas_punto_central = coordenadas_punto_central
 
-    def rotate_to_align_dipole_with_z(self):
-        """Rotates the molecule so that its vector is aligned with z."""
-        direction = np.array([0, 0, 1])
-        if direction.all() != self.dipolo.all():
-            matrix = rotation_matrix_from_vectors(self.dipolo, direction)
+    def rotate_to_align_with_z(self):
+        """Rotates the molecule so that its nearest symmetric
+        structure lies in the z=0 plane."""
+        z_direction = np.array([0, 0, 1])
+        if z_direction.all() != self.direction.all():
+            matrix = rotation_matrix_from_vectors(self.direction, z_direction)
             for i in range(self.nro_atoms):
                 self.positions[i] = matrix @ self.positions[i]
-            self.dipolo = matrix @ self.dipolo
+            self.direction = matrix @ self.direction
 
     def plot_dipolo(self):
-        """Plots the molecule dipole."""
+        """Plots the molecule dipole (if direction is replaced
+        by the molecule dipole)."""
         point = np.array([0, 0, 0])
-        dipolo = np.array([self.dipolo[0], self.dipolo[1], self.dipolo[2]])
+        dipolo = np.array([self.direction[0], self.direction[1], self.direction[2]])
         plot_vector(self.fig, point, dipolo)
 
     def plot_plano(self):
-        """Plots the plane normal to the dipole."""
+        """Plots the plane normal to the molecule direction."""
         point = np.array([0.0, 0.0, 0.0])
-        dipolo = np.array([self.dipolo[0], self.dipolo[1], self.dipolo[2]])
+        dipolo = np.array([self.direction[0], self.direction[1], self.direction[2]])
         if self.fig.get_axes():
             ax = self.fig.gca()
         else:

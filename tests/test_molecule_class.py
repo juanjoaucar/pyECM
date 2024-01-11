@@ -22,10 +22,10 @@ def test_create_mol_files(tmp_path):
     origen_achiral_atom = np.array([-1.31002, -0.33894, -0.62598])
     c = molecula(
         XYZ_file=main_directory+"pyECM/data/import/AP1_chiral.xyz",
-        dipolo=vector,
+        direction=vector,
         origen=origen_achiral_atom,
     )
-    c.rotate_to_align_dipole_with_z()
+    c.rotate_to_align_with_z()
 
 #    path = str(d) + "/"
 
@@ -72,10 +72,10 @@ def test_create_xyzfile(tmp_path):
     origen_achiral_atom = np.array([-1.31002, -0.33894, -0.62598])
     c = molecula(
         XYZ_file=main_directory+"pyECM/data/import/AP1_chiral.xyz",
-        dipolo=vector,
+        direction=vector,
         origen=origen_achiral_atom,
     )
-    c.rotate_to_align_dipole_with_z()
+    c.rotate_to_align_with_z()
 
     path = str(d) + "/"
     c.save_xyz(filename=path+"test.xyz")
@@ -102,8 +102,8 @@ def test_ecm_onpath_4c(tmp_path, capfd):
     vector = np.array([-0.1807, -0.9725, -0.1469])
     origen_achiral_atom = np.array([0.0000, 0.000, 0.0000])
     c = molecula(XYZ_file=main_directory+'pyECM/data/import/CFMAR_chiral.xyz',
-                 dipolo=vector, origen=origen_achiral_atom)
-    c.rotate_to_align_dipole_with_z()
+                 direction=vector, origen=origen_achiral_atom)
+    c.rotate_to_align_with_z()
     c.xyz_mirror_path(folder=path, prefix_name='CFMAR_chiral',
                       lim_inf=minimo, lim_sup=maximo, points=puntos, DIRAC=True)
 
@@ -122,9 +122,9 @@ def test_ecm_onpath_4c(tmp_path, capfd):
 def test_origin():
     vector = np.array([-0.1807, -0.9725, -0.1469])
     mol_A = molecula(XYZ_file=main_directory +
-                     'pyECM/data/import/water.xyz', dipolo=vector, origen="O")
+                     'pyECM/data/import/water.xyz', direction=vector, origen="O")
     mol_B = molecula(XYZ_file=main_directory +
-                     'pyECM/data/import/water.xyz', dipolo=vector)
+                     'pyECM/data/import/water.xyz', direction=vector)
 
 
 def test_ecm_onpath_cartesian(tmp_path, capfd):
@@ -139,8 +139,8 @@ def test_ecm_onpath_cartesian(tmp_path, capfd):
     vector = np.array([-0.1807, -0.9725, -0.1469])
     origen_achiral_atom = np.array([0.0000, 0.000, 0.0000])
     c = molecula(XYZ_file=main_directory+'pyECM/data/import/CFMAR_chiral.xyz',
-                 dipolo=vector, origen=origen_achiral_atom)
-    c.rotate_to_align_dipole_with_z()
+                 direction=vector, origen=origen_achiral_atom)
+    c.rotate_to_align_with_z()
     c.xyz_mirror_path(folder=path, prefix_name='CFMAR_chiral',
                       lim_inf=minimo, lim_sup=maximo, points=puntos, DIRAC=True)
 

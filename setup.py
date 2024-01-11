@@ -20,7 +20,8 @@ REQUIREMENTS = [
 	"matplotlib==3.4.2",
 	"mendeleev==0.12.1",
     "sphinxcontrib-bibtex==2.5.0",
-    "scipy==1.10.1"
+    "scipy==1.10.1",
+    "openpyxl==3.1.2"
 ]
 
 with open(PATH / "pyECM" / "__init__.py") as fp:
