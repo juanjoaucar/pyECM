@@ -23,43 +23,51 @@ This package allows to:
 Read more on [ECM publications](https://pubs.acs.org/doi/pdf/10.1021/ja028646%2B).
 
 ## Requirements
-First, you should install the required python packages:
-
-      - jupyterlab==3.1.13
-      - jupyter==1.0.0
-      - ipython[all]
-      - attrs==22.2.0
-      - numpy==1.21.2
-      - pyscf==2.1.1
-      - matplotlib==3.4.2
-      - mendeleev==0.12.1
-
-Check the file `requirements.txt`. Developers should install `requirements_dev.txt`.
+First, you should install the required python packages. They can be found in the file `requirements.txt`. Developers should install `requirements_dev.txt`.
 
 ## Installation
 pyECM is a **Python 3.9** package
 
-1. Install the virtual environment:
+1. Download this Git Repository
 
-    ```python -m venv venv```
+2. It is recommended to install a virtual environment:
 
-2. Activate the virtual environment:
+    ```python -m venv venv_pyecm```
 
-    ```source venv/bin/activate```
+3. Activate the virtual environment:
 
-3. Install the packages:
+    ```source venv_pyecm/bin/activate```
 
-      ```pip install pyECM```
+<!-- Install the packages through "pip install pyECM". Setup.py should be configured. -->
+4. Install dependencies:
 
-4. Run pyECM (check some examples below)
-    
-5. For developer only, install dependencies:
+    ```pip install -r requirements.txt```
+
+5. Run pyECM (check some examples below)
+
+<br/><br/>
+
+For developers,
+
+1. Install dependencies:
 
       ```pip install -r requirements.txt -r requirements_dev.txt```
 
-6. Run all test:
+2. Run all test:
 
       ``tox==3.24.3``
+
+      ``tox``
+
+
+<br/><br/>
+To create local html pages,
+
+1. Get into "docs" folder
+
+2. Create html pages
+
+      ```make html```
 
 ## Usage
 A detailed workflow is provided in the `workflow` directory. It has a list of Jupyter notebooks with detailed examples about pyECM tools and capabilities.
@@ -69,7 +77,7 @@ A detailed workflow is provided in the `workflow` directory. It has a list of Ju
 2. Calculation of ECM in a simple molecule. 
       - `02.ECM_one-molecule.ipynb` 
 3. Calculation of ECM in several molecules. 
-      - `03.ECM_several-molecules.ipynb` 
+      - `04.ECM_several-molecules.ipynb` 
 
 ## Roadmap
 Some of the ideas to keep growing are:
