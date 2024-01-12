@@ -431,9 +431,9 @@ class molecula:
         :rtype: float(s)
         """
 
-        coordenadas_x = self.atoms[0]
-        coordenadas_y = self.atoms[1]
-        coordenadas_z = self.atoms[2] * z_coordinate
+        coordenadas_x = self.positions[:, 0]
+        coordenadas_y = self.positions[:, 1]
+        coordenadas_z = self.positions[:, 2] * z_coordinate
 
         mean_x = np.average(coordenadas_x)
         mean_y = np.average(coordenadas_y)
@@ -465,7 +465,7 @@ class molecula:
         CCM_1 = (1 / Norm_1) * np.sum(coordenadas_z**2) * 100
 
         # Method 2
-        # Add citation
+        # https://doi.org/10.1002/chir.20807 (Eq. 1)
         Norm_2 = np.sum(
             (coordenadas_x - mean_x) ** 2
             + (coordenadas_y - mean_y) ** 2

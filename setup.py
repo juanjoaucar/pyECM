@@ -1,3 +1,5 @@
+# Read the following:
+# https://betterscientificsoftware.github.io/python-for-hpc/tutorials/python-pypi-packaging/
 import os
 import pathlib
 
