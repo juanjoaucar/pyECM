@@ -35,8 +35,6 @@ class molecula:
     :type preloaded_molecule: _type_, optional
     :param figure: _description_, defaults to None
     :type figure: _type_, optional
-    :param campo: _description_, defaults to None
-    :type campo: _type_, optional
     :param origen: _description_, defaults to None
     :type origen: _type_, optional
     :param XYZ_file: _description_, defaults to None
@@ -49,9 +47,9 @@ class molecula:
         self,
         preloaded_molecule=None,
         figure=None,
-        campo=None,
         origen=None,
         XYZ_file=None,
+        XYZ_achiral_file=None,
         direction=None,
         **kwargs
     ):
@@ -68,6 +66,13 @@ class molecula:
             self.XYZ_file = XYZ_file
             self.load_from_xyz(filename=self.XYZ_file)
             self.direction = direction
+
+        if XYZ_achiral_file is not None:
+            self.XYZ_achiral_file = XYZ_achiral_file
+            self.load_from_xyz(filename=self.XYZ_achiral_file, achiral=True)
+
+        else:
+            self.XYZ_achiral_file = None
 
         # self.validar()
         self.atoms_positions()
@@ -90,6 +95,18 @@ class molecula:
         for i in range(self.nro_atoms):
             positions.append([self.atoms[0][i], self.atoms[1][i], self.atoms[2][i]])
         self.positions = np.array(positions)
+
+        if self.XYZ_achiral_file is not None:
+            positions_achiral = []
+            for i in range(self.nro_atoms):
+                positions_achiral.append(
+                    [
+                        self.achiral_atoms[0][i],
+                        self.achiral_atoms[1][i],
+                        self.achiral_atoms[2][i],
+                    ]
+                )
+            self.positions_achiral = np.array(positions_achiral)
 
     def coordenadas_central(self):
         """Defines central point."""
@@ -246,7 +263,7 @@ class molecula:
                     + "\n"
                 )
 
-    def load_from_xyz(self, filename="MOL"):
+    def load_from_xyz(self, filename="MOL", achiral=False):
         """Loads the molecule from a xyz file.
 
         :param filename: xyz file name, defaults to "MOL"
@@ -272,11 +289,20 @@ class molecula:
             nombres[i] = atom
             i += 1
         xyz.close()
-        self.nro_atoms = n_atoms
-        self.atoms = (coord_x, coord_y, coord_z, colores, nombres)
+
+        if achiral:
+            self.achiral_atoms = (coord_x, coord_y, coord_z, colores, nombres)
+        else:
+            self.nro_atoms = n_atoms
+            self.atoms = (coord_x, coord_y, coord_z, colores, nombres)
 
     def export_xyz(
-        self, prefix_name="MOL", DIRAC=False, folder=None, z_coordinate=1.00
+        self,
+        prefix_name="MOL",
+        DIRAC=False,
+        folder=None,
+        z_coordinate=1.00,
+        achiral=None,
     ):
         """Generates the xyz files for the chiral molecule and
         the nearest symmetric structure.
@@ -303,28 +329,33 @@ class molecula:
 
         # We always need the nearest assymetric structure
         filename = folder + prefix_name + "_" + "0.00.xyz"
-        fila_0 = [self.nro_atoms, "", "", ""]
-        fila_1 = ["XYZ file", "", "", ""]
-        filas = np.vstack([fila_0, fila_1])
-        for j in range(self.nro_atoms):
-            new_line = np.array(
-                [
-                    atoms_name_xyz[j],
-                    self.positions[j][0],
-                    self.positions[j][1],
-                    self.positions[j][2] * 0,
-                ]
-            )
-            filas = np.vstack([filas, new_line])
-
-        # Remove xyz files if they exist
+        # Remove xyz file if exist
         try:
             os.remove(filename)
         except OSError:
             pass
 
-        with open(filename, "ab") as f:
-            np.savetxt(f, filas, fmt="%s")
+        if achiral is None:
+            fila_0 = [self.nro_atoms, "", "", ""]
+            fila_1 = ["XYZ file", "", "", ""]
+            filas = np.vstack([fila_0, fila_1])
+            for j in range(self.nro_atoms):
+                new_line = np.array(
+                    [
+                        atoms_name_xyz[j],
+                        self.positions[j][0],
+                        self.positions[j][1],
+                        self.positions[j][2] * 0,
+                    ]
+                )
+                filas = np.vstack([filas, new_line])
+
+            with open(filename, "ab") as f:
+                np.savetxt(f, filas, fmt="%s")
+        else:
+            import shutil
+
+            shutil.copyfile(achiral, folder + "/" + prefix_name + "_0.00.xyz")
 
         # Export the (rotated) chiral molecule
         filename = folder + prefix_name + "_" + "{:.2f}".format(z_coordinate) + ".xyz"
@@ -435,12 +466,29 @@ class molecula:
         coordenadas_y = self.positions[:, 1]
         coordenadas_z = self.positions[:, 2] * z_coordinate
 
+        # If the achiral structure was not imported, it is assumed that
+        # the molecule was rotated so that it'd defining direction
+        # lies on z-axis and the molecule lies on the z = 0 plane.
+        if self.XYZ_achiral_file is None:
+            achiral_x_coordinates = coordenadas_x
+            achiral_y_coordinates = coordenadas_y
+            achiral_z_coordinates = coordenadas_z * 0
+        else:
+            achiral_x_coordinates = self.positions_achiral[:, 0]
+            achiral_y_coordinates = self.positions_achiral[:, 1]
+            achiral_z_coordinates = self.positions_achiral[:, 2]
+
+        diff_x = coordenadas_x - achiral_x_coordinates
+        diff_y = coordenadas_y - achiral_y_coordinates
+        diff_z = coordenadas_z - achiral_z_coordinates
+        CCM_distance = np.sum(diff_x**2 + diff_y**2 + diff_z**2)
+
         mean_x = np.average(coordenadas_x)
         mean_y = np.average(coordenadas_y)
         mean_z = np.average(coordenadas_z)
 
         # Method 1
-        # Add citation
+        # https://doi.org/10.1021/ja9800941 (Eq. 1)
 
         mendeleev.Fe.atomic_weight
         atomic_weights = np.zeros(self.nro_atoms)
@@ -462,7 +510,7 @@ class molecula:
 
         D = np.max(distances_to_CM)
         Norm_1 = D**2 * self.nro_atoms
-        CCM_1 = (1 / Norm_1) * np.sum(coordenadas_z**2) * 100
+        CCM_1 = (1 / Norm_1) * CCM_distance * 100
 
         # Method 2
         # https://doi.org/10.1002/chir.20807 (Eq. 1)
@@ -471,8 +519,7 @@ class molecula:
             + (coordenadas_y - mean_y) ** 2
             + (coordenadas_z - mean_z) ** 2
         )
-        suma_2 = np.sum(coordenadas_z**2)
-        CCM_2 = suma_2 / Norm_2 * 100
+        CCM_2 = CCM_distance / Norm_2 * 100
 
         return Norm_1, CCM_1, Norm_2, CCM_2
 

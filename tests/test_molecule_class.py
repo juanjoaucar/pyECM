@@ -50,13 +50,9 @@ def test_create_mol_files(tmp_path):
     text_CCM_point_4 = str(c.CCM_on_path()[4])
 
     text_CCM_check_0 = "[0.2        0.28888889 0.37777778 0.46666667 0.55555556 0.64444444\n 0.73333333 0.82222222 0.91111111 1.        ]"
-#    text_CCM_check_1 = "[ 89.64770587  90.29057991  91.16722631  92.2776451   93.62183626\n  95.19979979  97.01153571  99.05704399 101.33632465 107.69228307]"
     text_CCM_check_1 = "[103.77109086 103.94859339 104.19064229 104.49723757 104.86837922\n 105.30406724 105.80430164 106.36908241 106.99840955 107.69228307]"
-#    text_CCM_check_2 = "[ 0.99441138  2.05998713  3.48882629  5.25971645  7.34722107  9.72255046\n 12.35448782 15.21031925 18.25672231 20.69477403]"
     text_CCM_check_2 = "[ 0.45649145  0.95080639  1.62215793  2.46807178  3.4854549   4.67062346\n  6.01933565  7.52682886  9.1878606  10.99675248]"
-#    text_CCM_check_3 = "[40.71576012 41.68426746 43.00495929 44.67783561 46.70289641 49.08014171\n 51.80957149 54.89118576 58.32498452 62.11096777]"
     text_CCM_check_3 = "[50.74202012 51.25666384 51.95845073 52.84738079 53.92345403 55.18667043\n 56.63703001 58.27453276 60.09917868 62.11096777]"
-#    text_CCM_check_4 = "[ 2.18948875  4.46205353  7.39604504 10.86342346 14.72842973 18.85864273\n 23.13332848 27.44865577 31.7200108  35.88202766]"
     text_CCM_check_4 = "[ 0.93355793  1.92823684  3.25286213  4.88021694  6.77838638  8.91221817\n 11.2447917  13.73879535 16.35773555 19.06692849]"
 
     assert text_CCM_point_0 == text_CCM_check_0
@@ -121,6 +117,34 @@ def test_ecm_onpath_4c(tmp_path, capfd):
     assert_almost_equal(zrate, test_zrate, decimal=4)
     assert_almost_equal(ECMs_NR, testECMs_NR, decimal=4)
     assert_almost_equal(ECMs_4c, testECMs_4c, decimal=4)
+
+
+@pytest.mark.short
+def test_ecm_importing_achiral(tmp_path, capfd):
+    d = tmp_path / "sub"
+    d.mkdir()
+    path = str(d) + "/"
+
+
+    MOL='AP1'
+    basis='sto-3g'
+
+    
+
+    mymolecule = molecula(XYZ_file = main_directory+'pyECM/data/import/'+MOL+'_chiral.xyz', XYZ_achiral_file = main_directory+'pyECM/data/import/'+MOL+'_achiral_S20.xyz')
+
+    mymolecule.export_xyz(folder=path, prefix_name=MOL+'_chiral', DIRAC = False, achiral=main_directory+'pyECM/data/import/'+MOL+'_achiral_S20.xyz')
+    options = {'cartesian' : False, 'tracking' : False, 'debug' : 0}
+
+    Norm1, CCM1, Norm2, CCM2 = mymolecule.CCM()
+    ECM_NR, ECM_molcontr, ECM_4c = mymolecule.ECM(name=path+MOL+'_chiral', fourcomp=False, basis_set=basis, **options)
+    out, err = capfd.readouterr()  # For possible test on stdout
+    test_results = np.array([8.53405882, 14.79694024, 42.00846244, 0])
+
+    assert_almost_equal(CCM1, test_results[0], decimal=4)
+    assert_almost_equal(CCM2, test_results[1], decimal=4)
+    assert_almost_equal(ECM_NR, test_results[2], decimal=4)
+
 
 
 def test_origin():
