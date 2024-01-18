@@ -270,7 +270,7 @@ class molecula:
         :type filename: str, optional
         """
 
-        #Check for empty lines in xyz file.
+        # Check for empty lines in xyz file.
         xyz_check = open(filename)
         n_atoms_check = int(xyz_check.readline())
         xyz_check.readline()  # title
@@ -278,7 +278,7 @@ class molecula:
         for line in xyz_check:
             j += 1
             if j > n_atoms_check:
-                raise TypeError('Error in xyz file format. Check for empty lines.')
+                raise TypeError("Error in xyz file format. Check for empty lines.")
         xyz_check.close()
 
         xyz = open(filename)
@@ -572,6 +572,8 @@ class molecula:
         cvalue=137.03599967994,
         cartesian=False,
         z_coordinate=1.00,
+        mol_charge=None,
+        mol_spin=None,
     ):
         """Calculate ECM in a certain structure
 
@@ -614,10 +616,17 @@ class molecula:
             basis=basis_set,
             verbose=0,
             max_memory=5000.0,
+            charge=mol_charge,
+            spin=mol_spin,
         )
 
         mol_achiral = gto.M(
-            atom=name + "_0.00.xyz", basis=basis_set, verbose=0, max_memory=5000.0
+            atom=name + "_0.00.xyz",
+            basis=basis_set,
+            verbose=0,
+            max_memory=5000.0,
+            charge=mol_charge,
+            spin=mol_spin,
         )
 
         if cartesian:
