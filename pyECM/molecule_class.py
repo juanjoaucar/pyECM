@@ -270,6 +270,17 @@ class molecula:
         :type filename: str, optional
         """
 
+        #Check for empty lines in xyz file.
+        xyz_check = open(filename)
+        n_atoms_check = int(xyz_check.readline())
+        xyz_check.readline()  # title
+        j = 0
+        for line in xyz_check:
+            j += 1
+            if j > n_atoms_check:
+                raise TypeError('Error in xyz file format. Check for empty lines.')
+        xyz_check.close()
+
         xyz = open(filename)
         n_atoms = int(xyz.readline())
         xyz.readline()  # title
