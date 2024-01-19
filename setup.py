@@ -13,7 +13,7 @@ PATH = pathlib.Path(os.path.abspath(os.path.dirname(__file__)))
 
 
 REQUIREMENTS = [
-	"jupyterlab==3.1.13",
+	"jupyterlab==3.6.7",
 	"jupyter==1.0.0",
 	"ipython[all]",
 	"attrs==22.2.0",

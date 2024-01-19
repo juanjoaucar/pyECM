@@ -4,7 +4,7 @@
 # >>> pipdeptree | sed "s/^.* - .*//g" | sed "/^$/d"
 # -----------------------------------------------------------------------------------------------------
 # for jupyter notebook
-jupyterlab==3.1.13
+jupyterlab==3.6.7
 jupyter==1.0.0
 ipython[all]
 
