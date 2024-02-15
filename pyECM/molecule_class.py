@@ -439,9 +439,9 @@ class molecula:
         prefix_name="MOL",
         DIRAC=False,
         folder=None,
-        lim_inf=0.5,
-        lim_sup=1.0,
-        points=11,
+        lim_inf=0.20,
+        lim_sup=1.00,
+        points=10,
     ):
         """Generates the molecules in the virtual mirror path, which is defined
         by reflecting the molecule in the plane z=0.
@@ -466,7 +466,7 @@ class molecula:
         for i in np.linspace(lim_inf, lim_sup, points):
             self.export_xyz(prefix_name, DIRAC, folder, i)
 
-    def CCM(self, z_coordinate=1.00):
+    def CCM(self, z_coordinate=1.00, path=False):
         """Calculates the CCM for the molecule.
 
         :return: NORM1, CCM1, NORM2, CCM2
@@ -532,7 +532,13 @@ class molecula:
         )
         CCM_2 = CCM_distance / Norm_2 * 100
 
-        return Norm_1, CCM_1, Norm_2, CCM_2
+        if path is False:
+            self.Norm1 = Norm_1
+            self.CCM1 = CCM_1
+            self.Norm2 = Norm_2
+            self.CCM2 = CCM_2
+        elif path is True:
+            return Norm_1, CCM_1, Norm_2, CCM_2
 
     def CCM_on_path(self, lim_inf=0.20, lim_sup=1.00, points=10):
         """Calculates the CCM for the molecules in the virtual mirror path.
@@ -555,85 +561,70 @@ class molecula:
         for j in np.linspace(lim_inf, lim_sup, points):
             z_rate[index] = j
             Norms_1[index], CCMs_1[index], Norms_2[index], CCMs_2[index] = self.CCM(
-                z_coordinate=j
+                z_coordinate=j, path=True
             )
             index = index + 1
 
         return z_rate, Norms_1, CCMs_1, Norms_2, CCMs_2
 
-    def ECM(
+    def pySCF_WF(
         self,
-        debug=0,
-        tracking=False,
-        basis_set="sto-6g",
         name=None,
-        NR=True,
-        fourcomp=False,
-        cvalue=137.03599967994,
         cartesian=False,
         z_coordinate=1.00,
-        mol_charge=None,
-        mol_spin=None,
+        gto_dict=None,
+        method_dict=None,
     ):
-        """Calculate ECM in a certain structure
+        """Obtain the wave function with the pySCF code.
 
-        :param debug: Debug printing level, defaults to 0
-        :type debug: int, optional
-        :param tracking: Print results for each z-rate
-        :type tracking: bool, optional
-        :param basis_set: basis set for describing
-            the electronic wave function, defaults to "sto-6g"
-        :type basis_set: str, optional
         :param name: name of the xyz molecule file,
             including its directory, defaults to None
-        :type name: str, optional
-        :param NR: calculates ECM at NR level, defaults to True
-        :type NR: bool, optional
-        :param fourcomp: calculates ECM at 4c level, defaults to False
-        :type fourcomp: bool, optional
-        :param cvalue: speed-ligh velocity, defaults to 137.03599967994
-        :type cvalue: float, optional
         :param cartesian: use cartesian basis set, defaults to False
         :type cartesian: bool, optional
-        :return: ECM(NR), molecular orbital contributions
-            to ECM(NR), ECM(4c)
-        :rtype: numpy.ndarray(s)
+        :param cartesian: use cartesian basis set, defaults to False
+        :type cartesian: bool, optional
+        :param gto_dict: Set options for Gaussian Type Orbitals, defaults to None
+        :type gto_dict: dict, optional
+        :param method_dict: Set method for WF calculation
+            with the pySCF code, defaults to None
+        :type method_dict: dict, optional
         """
 
-        ECM_NR = 0
-        # ovlp_NR = 0
-        # N_ovlp_NR = 0  # normalized
-        ECM_4c = 0
-        # ovlp_4c = 0
-        # N_ovlp_4c = 0  # normalized
-        ECM_molcontr = []
+        # Define default values for keys in gto_dict
+        if gto_dict is None:
+            gto_dict = {}
+        gto_dict.setdefault("basis", "sto-6g")
+        gto_dict.setdefault("charge", None)
+        gto_dict.setdefault("spin", None)
+        gto_dict.setdefault("verbose", 0)
 
-        if tracking:
-            print(name)
+        self.gto_dict = gto_dict
+
+        # Define default values for keys in method_dict
+        if method_dict is None:
+            method_dict = {}
+        else:
+            NR = method_dict.get(
+                "NR", True
+            )  # Get 'fourcomp' from dict. True as default.
+            fourcomp = method_dict.get(
+                "fourcomp", None
+            )  # Get 'fourcomp' from dict. None as default.
+            debug = method_dict.get(
+                "debug", 0
+            )  # Get 'debug' from dict. None as default.
+            cvalue = method_dict.get(
+                "cvalue", 137.03599967994
+            )  # Get 'cvalue' from dict. None as default.
 
         mol_chiral = gto.M(
             atom=name + "_" + "{:.2f}".format(z_coordinate) + ".xyz",
-            basis=basis_set,
-            verbose=0,
             max_memory=5000.0,
-            charge=mol_charge,
-            spin=mol_spin,
-        )
-
-        mol_achiral = gto.M(
-            atom=name + "_0.00.xyz",
-            basis=basis_set,
-            verbose=0,
-            max_memory=5000.0,
-            charge=mol_charge,
-            spin=mol_spin,
+            **self.gto_dict
         )
 
         if cartesian:
             mol_chiral, ctr_coeff1 = mol_chiral.to_uncontracted_cartesian_basis()
-            mol_achiral, ctr_coeff2 = mol_achiral.to_uncontracted_cartesian_basis()
-
-        mol_super = mol_chiral + mol_achiral
 
         if NR:
             start_NRtime = time.time()
@@ -645,8 +636,158 @@ class molecula:
             # mf_chiral.xc = 'b3lyp'
             # mf_chiral.kernel()
 
-            naos_sph = mol_chiral.intor("int1e_ovlp_sph").shape[0]
+            overlap_chiral = mol_chiral.intor("int1e_ovlp")
+
+            # Cantidad de orbitales atómicos
+            AO_number = mol_chiral.nao
+
+            # Cantidad de MO ocupados
             occupied_MO = mf_chiral.mol.nelec[0]
+
+            # Coeficientes
+            all_mo_coef = mf_chiral.mo_coeff
+            ocupp_mo_coeff = mf_chiral.mo_coeff[0:AO_number, 0:occupied_MO]
+
+            norma = np.trace(mm(mm(tp(ocupp_mo_coeff), overlap_chiral), ocupp_mo_coeff))
+
+            end_NRtime = time.time()
+            if debug > 0:
+                print("naos_cart:", mol_chiral.nao)
+                print("MO (doubly) occupied:", occupied_MO)
+                print("norma WF (original molecule):", norma)
+                print("NR energy", mf_chiral.e_tot)
+                print("NR time (min):", (end_NRtime - start_NRtime) / 60)
+
+            self.NR_Noccupied_MO = mf_chiral.mol.nelec[0]
+            self.NR_all_MO = all_mo_coef
+            self.NR_occupied_MO = ocupp_mo_coeff
+
+        if fourcomp:
+            start_4ctime = time.time()
+            with light_speed(cvalue):
+                c = lib.param.LIGHT_SPEED
+
+                mf_chiral_rel = scf.DHF(mol_chiral)
+                mf_chiral_rel.kernel()
+
+                n4c, nmo = mf_chiral_rel.mo_coeff.shape
+                self.n4c, self.rel_nmo = n4c, nmo
+                n2c = n4c // 2
+                nNeg = nmo // 2  # molecular orbitals of negative energy
+                nocc = mol_chiral.nelectron
+                # nvir = nmo // 2 - nocc  # virtual orbitals
+                mo_pos_l = mf_chiral_rel.mo_coeff[:n2c, nNeg:]
+                mo_pos_s = mf_chiral_rel.mo_coeff[n2c:, nNeg:]  # * (.5/c)
+                Lo = mo_pos_l[:, :nocc]
+                So = mo_pos_s[:, :nocc]
+                # Lv = mo_pos_l[:,nocc:]
+                # Sv = mo_pos_s[:,nocc:]
+
+                from pyscf.scf.dhf import get_ovlp
+
+                overlap_chiral_4c = get_ovlp(mol_chiral)
+
+                overlap_chiral_large = overlap_chiral_4c[:n2c, :n2c]
+                overlap_chiral_small = overlap_chiral_4c[n2c:, n2c:]
+
+                AO_number = mol_chiral.nao
+
+                overlap_chiral = mol_chiral.intor("int1e_ovlp_spinor")
+
+                norma_LoLo_chiral = np.trace(
+                    mm(mm(tp(Lo).conjugate(), overlap_chiral_large), Lo)
+                )
+                norma_SoSo_chiral = np.trace(
+                    mm(mm(tp(So).conjugate(), overlap_chiral_small), So)
+                )
+                norma_total_chiral = norma_LoLo_chiral + norma_SoSo_chiral
+
+                end_4ctime = time.time()
+                if debug > 0:
+                    print("LoLo Norm:", norma_LoLo_chiral)
+                    print("SoSo Norm:", norma_SoSo_chiral)
+                    print("Total (chiral) Norm:", norma_total_chiral)
+                    print("cvalue", c)
+                    print("4c energy", mf_chiral_rel.e_tot)
+                    print("4c time (min):", (end_4ctime - start_4ctime) / 60)
+
+                self.rel_MO_Lo = Lo
+                self.rel_MO_So = So
+                self.rel_Noccupied_MO = nocc
+                self.rel_energy = mf_chiral_rel.e_tot
+
+        self.AO_number = AO_number
+
+    def ECM(
+        self,
+        name=None,
+        cartesian=False,
+        z_coordinate=1.00,
+        path=False,
+        method_dict=None,
+    ):
+        """Calculate ECM in a certain structure
+
+        :param name: name of the xyz molecule file,
+            including its directory, defaults to None
+        :param cartesian: use cartesian basis set, defaults to False
+        :type cartesian: bool, optional
+        :param z_coordinate: variable for ECM on path, defaults to 1.00
+        :type z_coordinate: float, optional
+        :param path: True for ECM on path, defaults to False
+        :type path: bool, optional
+        :param method_dict: Set method for WF calculation,
+            previously calculated, defaults to None
+        :type method_dict: dict, optional
+        :raises AttributeError: _description_
+        :return: _description_
+        :rtype: _type_
+        """
+
+        # Define default values for keys in method_dict
+        if method_dict is None:
+            method_dict = {}
+        else:
+            NR = method_dict.get(
+                "NR", True
+            )  # Get 'fourcomp' from dict. True as default.
+            fourcomp = method_dict.get(
+                "fourcomp", None
+            )  # Get 'fourcomp' from dict. None as default.
+            debug = method_dict.get(
+                "debug", 0
+            )  # Get 'debug' from dict. None as default.
+
+        ECM_NR = None
+        ECM_4c = None
+        ECM_molcontr = []
+
+        mol_chiral = gto.M(
+            atom=name + "_" + "{:.2f}".format(z_coordinate) + ".xyz",
+            max_memory=5000.0,
+            **self.gto_dict
+        )
+
+        mol_achiral = gto.M(atom=name + "_0.00.xyz", max_memory=5000.0, **self.gto_dict)
+
+        if cartesian:
+            mol_chiral, ctr_coeff1 = mol_chiral.to_uncontracted_cartesian_basis()
+            mol_achiral, ctr_coeff2 = mol_achiral.to_uncontracted_cartesian_basis()
+
+        mol_super = mol_chiral + mol_achiral
+
+        if NR:
+            start_NRtime = time.time()
+            #            mf_chiral = scf.RHF(mol_chiral)
+            #            mf_chiral.kernel()
+
+            # from pyscf import dft
+            # mf_chiral = dft.RKS(mol_chiral)
+            # mf_chiral.xc = 'b3lyp'
+            # mf_chiral.kernel()
+
+            naos_sph = mol_chiral.intor("int1e_ovlp_sph").shape[0]
+            occupied_MO = self.NR_Noccupied_MO
             AO_number = mol_chiral.nao
             AO_number_supermol = np.array([mol_super.nao])[0]
 
@@ -662,7 +803,7 @@ class molecula:
             overlap_pot_chiral = matrix_power(overlap_chiral, 0.5)
             overlap_pot_achiral = matrix_power(overlap_achiral, -0.5)
 
-            ocupp_mo_coeff = mf_chiral.mo_coeff[0:AO_number, 0:occupied_MO]
+            ocupp_mo_coeff = self.NR_all_MO[0:AO_number, 0:occupied_MO]
             norma_chiral = np.trace(
                 mm(mm(tp(ocupp_mo_coeff), overlap_chiral), ocupp_mo_coeff)
             )
@@ -670,7 +811,7 @@ class molecula:
             # old basis: chiral basis set
             # new basis: achiral basis set
             C_achiral_newbasis = mm(
-                mm(overlap_pot_achiral, overlap_pot_chiral), mf_chiral.mo_coeff
+                mm(overlap_pot_achiral, overlap_pot_chiral), self.NR_all_MO
             )
 
             achiral_norm = 0
@@ -686,7 +827,7 @@ class molecula:
                 solapamiento_NR = (
                     solapamiento_NR
                     + mm(
-                        mm(tp(mf_chiral.mo_coeff).conjugate(), overlap_mixed),
+                        mm(tp(self.NR_all_MO).conjugate(), overlap_mixed),
                         C_achiral_newbasis,
                     )[k, k]
                 )
@@ -697,7 +838,7 @@ class molecula:
                         1
                         - np.abs(
                             mm(
-                                mm(tp(mf_chiral.mo_coeff), overlap_mixed),
+                                mm(tp(self.NR_all_MO), overlap_mixed),
                                 C_achiral_newbasis,
                             )[k, k]
                         )
@@ -708,8 +849,6 @@ class molecula:
             #     print(" ")
 
             ECM_NR = 100 * (1 - np.abs(solapamiento_NR) / norma_chiral)
-            # ovlp_NR = solapamiento_NR
-            # N_ovlp_NR = solapamiento_NR / occupied_MO
 
             end_NRtime = time.time()
             if debug > 0:
@@ -722,202 +861,168 @@ class molecula:
                 print("overlap:", solapamiento_NR / norma_chiral)
                 print("NR time (min):", (end_NRtime - start_NRtime) / 60)
 
-        # nuevo_NR = np.transpose(np.reshape(
-        # np.ravel(ECMs_molcontr),(points,occupied_MO)))
-        # return z_rate, ECMs, nuevo_NR
-
         if fourcomp:
-            start_4ctime = time.time()
-            # nuevo_4c = None
-            with light_speed(cvalue):
-                c = lib.param.LIGHT_SPEED
+            from pyscf.scf.dhf import get_ovlp
 
-                mf_chiral_rel = scf.DHF(mol_chiral)
-                mf_chiral_rel.kernel()
-
-                n4c, nmo = mf_chiral_rel.mo_coeff.shape
-                n2c = n4c // 2
-                nNeg = nmo // 2  # molecular orbitals of negative energy
-                nocc = mol_chiral.nelectron
-                # nvir = nmo // 2 - nocc  # virtual orbitals
-                mo_pos_l = mf_chiral_rel.mo_coeff[:n2c, nNeg:]
-                mo_pos_s = mf_chiral_rel.mo_coeff[n2c:, nNeg:]  # * (.5/c)
-                Lo = mo_pos_l[:, :nocc]
-                So = mo_pos_s[:, :nocc]
-                # Lv = mo_pos_l[:,nocc:]
-                # Sv = mo_pos_s[:,nocc:]
-
-                from pyscf.scf.dhf import get_ovlp
-
-                overlap_chiral_4c = get_ovlp(mol_chiral)
-                overlap_achiral_4c = get_ovlp(mol_achiral)
-
-                overlap_chiral_large = overlap_chiral_4c[:n2c, :n2c]
-                overlap_chiral_small = overlap_chiral_4c[n2c:, n2c:]
-
-                overlap_achiral_large = overlap_achiral_4c[:n2c, :n2c]
-                overlap_achiral_small = overlap_achiral_4c[n2c:, n2c:]
-
-                mol_super = mol_chiral + mol_achiral
-                overlap_supermol_4c = get_ovlp(mol_super)
-
-                # Its ok:
-                # overlap_chiral_large -
-                # overlap_supermol_4c[:n2c,0:n2c]
-                # overlap_achiral_large -
-                # overlap_supermol_4c[n2c:2*n2c,n2c:2*n2c]
-                # overlap_chiral_small -
-                # overlap_supermol_4c[2*n2c:3*n2c,2*n2c:3*n2c]
-                # overlap_achiral_small -
-                # overlap_supermol_4c[3*n2c:4*n2c,3*n2c:4*n2c]
-
-                overlap_mixed_SchiralSachiral = overlap_supermol_4c[
-                    2 * n2c : 3 * n2c, 2 * n2c : 3 * n2c
-                ]
-                overlap_mixed_LchiralLachiral = overlap_supermol_4c[:n2c, n2c : 2 * n2c]
-
-                AO_number = mol_chiral.nao
-                AO_number_supermol = np.array([mol_super.nao])[0]
-
-                overlap_mixed_fullspace = mol_super.intor("int1e_ovlp_spinor")
-                overlap_mixed = overlap_mixed_fullspace[
-                    0 : int(AO_number_supermol),
-                    int(AO_number_supermol) : 2 * AO_number_supermol,
-                ]
-
-                overlap_chiral = mol_chiral.intor("int1e_ovlp_spinor")
-                overlap_achiral = mol_achiral.intor("int1e_ovlp_spinor")
-
-                overlap_pot_chiral = matrix_power(overlap_chiral, 0.5)
-                overlap_pot_achiral = matrix_power(overlap_achiral, -0.5)
-
-                # overlap_pot_chiral_large = matrix_power(overlap_chiral_large, 0.5)
-                overlap_pot_achiral_large = matrix_power(overlap_achiral_large, -0.5)
-
-                # overlap_pot_chiral_small = matrix_power(overlap_chiral_small, 0.5)
-                overlap_pot_achiral_small = matrix_power(overlap_achiral_small, -0.5)
-
-                overlap_ll_pot_chiral = matrix_power(overlap_chiral_large, 0.5)
-                # overlap_ll_pot_achiral=matrix_power(overlap_achiral_large,0.5)
-                overlap_ss_pot_chiral = matrix_power(overlap_chiral_small, 0.5)
-                # overlap_ss_pot_achiral=matrix_power(overlap_achiral_small,0.5)
-
-                norma_LoLo_chiral = np.trace(
-                    mm(mm(tp(Lo).conjugate(), overlap_chiral_large), Lo)
-                )
-                norma_SoSo_chiral = np.trace(
-                    mm(mm(tp(So).conjugate(), overlap_chiral_small), So)
-                )
-                norma_total_chiral = norma_LoLo_chiral + norma_SoSo_chiral
-
-                # MCOEFF new basis:
-                # C_Lo_achiral_newbasis =
-                # mm(mm(overlap_pot_achiral,overlap_ll_pot_chiral),Lo)
-                # C_So_achiral_newbasis =
-                # mm(mm(overlap_pot_achiral,overlap_ss_pot_chiral),So)
-                C_Lo_achiral_newbasis = mm(
-                    mm(overlap_pot_achiral_large, overlap_ll_pot_chiral), Lo
-                )
-                C_So_achiral_newbasis = mm(
-                    mm(overlap_pot_achiral_small, overlap_ss_pot_chiral), So
+            if not hasattr(self, "rel_MO_Lo"):
+                raise AttributeError(
+                    "The four-component wave function is not defined within the class. "
+                    "Try with fourcomp = False."
                 )
 
-                achiral_norm_So = 0
-                achiral_norm_Lo = 0
-                solapamiento_LoLo = 0
-                solapamiento_SoSo = 0
+            n2c = self.n4c // 2
+            nocc = self.rel_Noccupied_MO
 
-                for k in range(nocc):
-                    achiral_norm_Lo = (
-                        achiral_norm_Lo
-                        + mm(
-                            mm(
-                                tp(C_Lo_achiral_newbasis).conjugate(),
-                                overlap_achiral_large,
-                            ),
-                            C_Lo_achiral_newbasis,
-                        )[k, k]
-                    )
-                    achiral_norm_So = (
-                        achiral_norm_So
-                        + mm(
-                            mm(
-                                tp(C_So_achiral_newbasis).conjugate(),
-                                overlap_achiral_small,
-                            ),
-                            C_So_achiral_newbasis,
-                        )[k, k]
-                    )
-                    solapamiento_LoLo = (
-                        solapamiento_LoLo
-                        + mm(
-                            mm(tp(Lo).conjugate(), overlap_mixed_LchiralLachiral),
-                            C_Lo_achiral_newbasis,
-                        )[k, k]
-                    )
-                    solapamiento_SoSo = (
-                        solapamiento_SoSo
-                        + mm(
-                            mm(tp(So).conjugate(), overlap_mixed_SchiralSachiral),
-                            C_So_achiral_newbasis,
-                        )[k, k]
-                    )
+            Lo = self.rel_MO_Lo  # Large MO coefficients
+            So = self.rel_MO_So  # Small MO coefficients
 
-                solapamiento_total = (solapamiento_LoLo + solapamiento_SoSo).real
-                ECM_4c = 100 * (
-                    1 - np.abs(solapamiento_total) / np.abs(norma_total_chiral)
-                )
-                # ovlp_4c = solapamiento_total.real
-                # N_ovlp_4c = solapamiento_total.real / nocc
+            overlap_chiral_4c = get_ovlp(mol_chiral)
+            overlap_achiral_4c = get_ovlp(mol_achiral)
 
-                end_4ctime = time.time()
-                if debug > 0:
-                    print("LoLo Norm:", norma_LoLo_chiral)
-                    print("SoSo Norm:", norma_SoSo_chiral)
-                    print("Total (chiral) Norm:", norma_total_chiral)
-                    print("Achiral LoLo Norm:", achiral_norm_Lo)
-                    print("Achiral SoSo Norm:", achiral_norm_So)
-                    print("LoLo chiral/achiral overlap:", solapamiento_LoLo / nocc)
-                    print("SoSo chiral/achiral overlap:", solapamiento_SoSo / nocc)
-                    print("suma solapamientos:", solapamiento_total / nocc)
-                    print("cvalue", c)
-                    print("4c energy", mf_chiral_rel.e_tot)
-                    print("ECM LL+SS:", ECM_4c)
-                    print("4c time (min):", (end_4ctime - start_4ctime) / 60)
+            overlap_chiral_large = overlap_chiral_4c[:n2c, :n2c]
+            overlap_chiral_small = overlap_chiral_4c[n2c:, n2c:]
 
-        if tracking:
-            print(
-                "{:.2f}".format(ECM_NR),
-                "{:.2f}".format(ECM_4c),
+            overlap_achiral_large = overlap_achiral_4c[:n2c, :n2c]
+            overlap_achiral_small = overlap_achiral_4c[n2c:, n2c:]
+
+            mol_super = mol_chiral + mol_achiral
+            overlap_supermol_4c = get_ovlp(mol_super)
+
+            # Its ok:
+            # overlap_chiral_large -
+            # overlap_supermol_4c[:n2c,0:n2c]
+            # overlap_achiral_large -
+            # overlap_supermol_4c[n2c:2*n2c,n2c:2*n2c]
+            # overlap_chiral_small -
+            # overlap_supermol_4c[2*n2c:3*n2c,2*n2c:3*n2c]
+            # overlap_achiral_small -
+            # overlap_supermol_4c[3*n2c:4*n2c,3*n2c:4*n2c]
+
+            overlap_mixed_SchiralSachiral = overlap_supermol_4c[
+                2 * n2c : 3 * n2c, 2 * n2c : 3 * n2c
+            ]
+            overlap_mixed_LchiralLachiral = overlap_supermol_4c[:n2c, n2c : 2 * n2c]
+
+            AO_number = mol_chiral.nao
+            AO_number_supermol = np.array([mol_super.nao])[0]
+
+            overlap_mixed_fullspace = mol_super.intor("int1e_ovlp_spinor")
+            overlap_mixed = overlap_mixed_fullspace[
+                0 : int(AO_number_supermol),
+                int(AO_number_supermol) : 2 * AO_number_supermol,
+            ]
+
+            overlap_chiral = mol_chiral.intor("int1e_ovlp_spinor")
+            overlap_achiral = mol_achiral.intor("int1e_ovlp_spinor")
+
+            overlap_pot_chiral = matrix_power(overlap_chiral, 0.5)
+            overlap_pot_achiral = matrix_power(overlap_achiral, -0.5)
+
+            overlap_pot_achiral_large = matrix_power(overlap_achiral_large, -0.5)
+
+            overlap_pot_achiral_small = matrix_power(overlap_achiral_small, -0.5)
+
+            overlap_ll_pot_chiral = matrix_power(overlap_chiral_large, 0.5)
+            overlap_ss_pot_chiral = matrix_power(overlap_chiral_small, 0.5)
+
+            norma_LoLo_chiral = np.trace(
+                mm(mm(tp(Lo).conjugate(), overlap_chiral_large), Lo)
+            )
+            norma_SoSo_chiral = np.trace(
+                mm(mm(tp(So).conjugate(), overlap_chiral_small), So)
+            )
+            norma_total_chiral = norma_LoLo_chiral + norma_SoSo_chiral
+
+            # MCOEFF new basis:
+            # C_Lo_achiral_newbasis =
+            # mm(mm(overlap_pot_achiral,overlap_ll_pot_chiral),Lo)
+            # C_So_achiral_newbasis =
+            # mm(mm(overlap_pot_achiral,overlap_ss_pot_chiral),So)
+            C_Lo_achiral_newbasis = mm(
+                mm(overlap_pot_achiral_large, overlap_ll_pot_chiral), Lo
+            )
+            C_So_achiral_newbasis = mm(
+                mm(overlap_pot_achiral_small, overlap_ss_pot_chiral), So
             )
 
-        nuevo_NR = np.transpose(np.reshape(np.ravel(ECM_molcontr), (occupied_MO)))
+            achiral_norm_So = 0
+            achiral_norm_Lo = 0
+            solapamiento_LoLo = 0
+            solapamiento_SoSo = 0
 
-        return ECM_NR, nuevo_NR, ECM_4c
+            for k in range(nocc):
+                achiral_norm_Lo = (
+                    achiral_norm_Lo
+                    + mm(
+                        mm(
+                            tp(C_Lo_achiral_newbasis).conjugate(),
+                            overlap_achiral_large,
+                        ),
+                        C_Lo_achiral_newbasis,
+                    )[k, k]
+                )
+                achiral_norm_So = (
+                    achiral_norm_So
+                    + mm(
+                        mm(
+                            tp(C_So_achiral_newbasis).conjugate(),
+                            overlap_achiral_small,
+                        ),
+                        C_So_achiral_newbasis,
+                    )[k, k]
+                )
+                solapamiento_LoLo = (
+                    solapamiento_LoLo
+                    + mm(
+                        mm(tp(Lo).conjugate(), overlap_mixed_LchiralLachiral),
+                        C_Lo_achiral_newbasis,
+                    )[k, k]
+                )
+                solapamiento_SoSo = (
+                    solapamiento_SoSo
+                    + mm(
+                        mm(tp(So).conjugate(), overlap_mixed_SchiralSachiral),
+                        C_So_achiral_newbasis,
+                    )[k, k]
+                )
+
+            solapamiento_total = (solapamiento_LoLo + solapamiento_SoSo).real
+            ECM_4c = 100 * (1 - np.abs(solapamiento_total) / np.abs(norma_total_chiral))
+
+            if debug > 0:
+                print("LoLo Norm:", norma_LoLo_chiral)
+                print("SoSo Norm:", norma_SoSo_chiral)
+                print("Total (chiral) Norm:", norma_total_chiral)
+                print("Achiral LoLo Norm:", achiral_norm_Lo)
+                print("Achiral SoSo Norm:", achiral_norm_So)
+                print("LoLo chiral/achiral overlap:", solapamiento_LoLo / nocc)
+                print("SoSo chiral/achiral overlap:", solapamiento_SoSo / nocc)
+                print("suma solapamientos:", solapamiento_total / nocc)
+                print("ECM LL+SS:", ECM_4c)
+
+        ECM_NR_molcontr = np.transpose(
+            np.reshape(np.ravel(ECM_molcontr), (occupied_MO))
+        )
+
+        if path is False:
+            self.ECM_NR = ECM_NR
+            self.ECM_NR_molcontr = ECM_NR_molcontr
+            self.ECM_4c = ECM_4c
+        elif path is True:
+            return ECM_NR, ECM_NR_molcontr, ECM_4c
 
     def ECM_on_path(
         self,
-        debug=0,
-        tracking=False,
-        basis_set="sto-6g",
         name=None,
         lim_inf=0.20,
         lim_sup=1.00,
         points=10,
-        NR=True,
-        fourcomp=False,
-        cvalue=137.03599967994,
         cartesian=False,
+        method_dict=None,
+        gto_dict=None,
     ):
         """Calculate ECM in the virtual mirror path
 
-        :param debug: Debug printing level, defaults to 0
-        :type debug: int, optional
-        :param tracking: Print results for each z-rate
-        :type tracking: bool, optional
-        :param basis_set: basis set for describing
-            the electronic wave function, defaults to "sto-6g"
-        :type basis_set: str, optional
         :param name: name of the xyz molecule file,
             including its directory, defaults to None
         :type name: str, optional
@@ -927,14 +1032,11 @@ class molecula:
         :type lim_sup: float, optional
         :param points: number of z-rates where calculating the ECM, defaults to 10
         :type points: int, optional
-        :param NR: calculates ECM at NR level, defaults to True
-        :type NR: bool, optional
-        :param fourcomp: calculates ECM at 4c level, defaults to False
-        :type fourcomp: bool, optional
-        :param cvalue: speed-ligh velocity, defaults to 137.03599967994
-        :type cvalue: float, optional
-        :param cartesian: use cartesian basis set, defaults to False
-        :type cartesian: bool, optional
+        :param method_dict: Set method for WF calculation
+            (previously calculated), defaults to None
+        :type method_dict: dict, optional
+        :param gto_dict: Set options for Gaussian Type Orbitals, defaults to None
+        :type gto_dict: dict, optional
         :return: z-rates, ECMs(NR), molecular orbital contributions
             to ECMs(NR), ECMs(4c)
         :rtype: numpy.ndarray(s)
@@ -942,21 +1044,28 @@ class molecula:
 
         z_rate = np.zeros(points)
         ECMs_NR = np.zeros(points)
-        # ovlp_NR = np.zeros(points)
-        # N_ovlp_NR = np.zeros(points)  # normalized
         ECMs_4c = np.zeros(points)
-        # ovlp_4c = np.zeros(points)
-        # N_ovlp_4c = np.zeros(points)  # normalized
         ECMs_molcontr = []
 
         index = 0
-        if tracking:
-            print(name)
 
         for j in np.linspace(lim_inf, lim_sup, points):
             z_rate[index] = j
+
+            self.pySCF_WF(
+                name,
+                z_coordinate=j,
+                gto_dict=gto_dict,
+                method_dict=method_dict,
+                cartesian=cartesian,
+            )
+
             ECMs_NR[index], nuevo_NR, ECMs_4c[index] = self.ECM(
-                debug, tracking, basis_set, name, NR, fourcomp, cvalue, cartesian, j
+                name,
+                method_dict=method_dict,
+                z_coordinate=j,
+                path=True,
+                cartesian=cartesian,
             )
             ECMs_molcontr.append(nuevo_NR)
             index = index + 1
