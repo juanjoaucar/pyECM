@@ -612,10 +612,10 @@ class molecula:
             )  # Get 'fourcomp' from dict. None as default.
             debug = method_dict.get(
                 "debug", 0
-            )  # Get 'debug' from dict. None as default.
+            )  # Get 'debug' from dict. Zero as default.
             cvalue = method_dict.get(
                 "cvalue", 137.03599967994
-            )  # Get 'cvalue' from dict. None as default.
+            )  # Get 'cvalue' from dict. 137.03599967994 as default.
 
         mol_chiral = gto.M(
             atom=name + "_" + "{:.2f}".format(z_coordinate) + ".xyz",
@@ -1073,3 +1073,102 @@ class molecula:
         ECMs_molcontr = np.array(ECMs_molcontr).T
 
         return z_rate, ECMs_NR, ECMs_molcontr, ECMs_4c
+
+    def gamma5(
+        self, name=None, cartesian=False, z_coordinate=1.00, method_dict=None, debug=0
+    ):
+        """Calculate Gamma5 expectation value
+
+        :param name: name of the xyz molecule file,
+            including its directory, defaults to None
+        :param cartesian: use cartesian basis set, defaults to False
+        :type cartesian: bool, optional
+        :param z_coordinate: variable for ECM on path, defaults to 1.00
+        :type z_coordinate: float, optional
+        :param method_dict: Set method for WF calculation,
+            previously calculated, defaults to None
+        :type method_dict: dict, optional
+        :param debug: debugg level, defaults to 0
+        :type debug: int, optional
+        :raises AttributeError: check for 4c wave function
+        :return: Gamma5 expectation value
+        :rtype: real
+        """
+
+        if not hasattr(self, "rel_MO_Lo"):
+            raise AttributeError(
+                "The four-component wave function is not defined within the class. "
+            )
+
+        # Define default values for keys in method_dict
+        if method_dict is None:
+            method_dict = {}
+        else:
+            # Get 'cvalue' from dict. 137.03599967994 as default.
+            cvalue = method_dict.get("cvalue", 137.03599967994)
+
+        gamma5 = 0
+        # gamma5_molcontr = []
+
+        mol_chiral = gto.M(
+            atom=name + "_" + "{:.2f}".format(z_coordinate) + ".xyz",
+            max_memory=5000.0,
+            **self.gto_dict
+        )
+
+        if cartesian:
+            mol_chiral, ctr_coeff1 = mol_chiral.to_uncontracted_cartesian_basis()
+
+        n4c = self.n4c
+        n2c = n4c // 2
+        nocc = self.rel_Noccupied_MO
+
+        Lo = self.rel_MO_Lo
+        So = self.rel_MO_So
+
+        # Taken from https://pyscf.org/_modules/pyscf/scf/dhf.html#DHF.
+        s = mol_chiral.intor_symmetric("int1e_ovlp_spinor")
+        t = mol_chiral.intor_symmetric("int1e_spsp_spinor")
+        u = mol_chiral.intor_symmetric("int1e_sp_spinor")
+        s1e = np.zeros((n4c, n4c), np.complex128)
+        s1e[:n2c, :n2c] = s
+        s1e[n2c:, n2c:] = t * (0.5 / cvalue) ** 2
+        s1e[:n2c, n2c:] = u * (0.5 / cvalue)  # Small (ket) over large (bra)
+        s1e[n2c:, :n2c] = u.conj().T * (0.5 / cvalue)  # Large (ket) over small (bra)
+        # s1e is what we should get when calling to get_ovlp(mol_chiral)
+
+        overlap_chiral_large = s1e[:n2c, :n2c]
+        overlap_chiral_small = s1e[n2c:, n2c:]
+
+        norma_LoLo_chiral = np.trace(
+            mm(mm(tp(Lo).conjugate(), overlap_chiral_large), Lo)
+        )
+        norma_SoSo_chiral = np.trace(
+            mm(mm(tp(So).conjugate(), overlap_chiral_small), So)
+        )
+        norma_total_chiral = norma_LoLo_chiral + norma_SoSo_chiral
+
+        valor1 = 0
+        valor2 = 0
+
+        for k in range(nocc):
+            large_on_small = mm(mm(tp(So).conjugate(), s1e[n2c:, :n2c]), Lo)[k, k]
+            small_on_large = mm(mm(tp(Lo).conjugate(), s1e[:n2c, n2c:]), So)[k, k]
+
+            valor1 = valor1 + large_on_small
+            valor2 = valor2 + small_on_large
+
+            # Molecular Contributions
+            # print("mol. contr. gamma5",
+            # ((large_on_small+small_on_large)*cvalue/2).real )
+
+        gamma5 = (valor1 + valor2) / norma_total_chiral.real * cvalue / 2
+
+        if debug > 0:
+            print("LoLo Norm:", norma_LoLo_chiral)
+            print("SoSo Norm:", norma_SoSo_chiral)
+            print("Total (chiral) Norm:", norma_total_chiral)
+            print("cvalue", cvalue)
+            print("4c energy", self.rel_energy)
+
+        return gamma5.real
